@@ -50,7 +50,7 @@
   /* entrances */
   const groups = [['.wall > *', '.wall'], ['.rates tbody tr', '.rates']];
   groups.forEach(([sel]) => $$(sel).forEach((el, i) => el.style.setProperty('--n', i)));
-    $$('.flow > :not(ul):not(ol), .check li, .plain li, .vows li, .med-grid li, .logos li, .route ol > li, .pay li, .coords > *, .cert > *, .foot-row > *, .sim-form > *, .sim-result > *, .sim-dossier > *, .med-filters > *, .docs article').forEach((el) => el.setAttribute('data-rise', ''));
+    $$('.flow > :not(ul):not(ol), .check li, .plain li, .vows li, .med-grid li, .logos li, .route ol > li, .pay li, .coords > *, .cert > *, .foot-row > *, .sim-form > *, .sim-result > *, .sim-dossier > *, .med-filters > *, .docs article, .pl-p, .pl-note, .ct-way, .ct-card').forEach((el) => el.setAttribute('data-rise', ''));
   $$('[data-rise]').forEach((el) => {
     const peers = [...el.parentElement.children].filter((x) => x.hasAttribute('data-rise'));
     el.style.setProperty('--d', `${Math.min(peers.indexOf(el), 5) * 70}ms`);
@@ -61,7 +61,7 @@
     io.unobserve(en.target);
     if (en.target.matches('[data-count-to]')) countUp(en.target);
   }), { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-  $$('[data-rise], .wall, .rates, .iso-cert, .study, .story-y, [data-count-to]').forEach((el) => io.observe(el));
+  $$('[data-rise], .pl-grid, .pl-soil, .wall, .rates, .iso-cert, .study, .story-y, [data-count-to]').forEach((el) => io.observe(el));
 
   setTimeout(() => {
     $$('.shutter').forEach((el) => el.classList.add('is-in'));
@@ -256,8 +256,11 @@
     location.href = `mailto:${f.dataset.mail}?subject=${encodeURIComponent(d.get('subject'))}&body=${encodeURIComponent(body)}`;
   }));
 
-  /* map embed loads on request */
-  $$('[data-embed]').forEach((box) => $('button', box)?.addEventListener('click', () => {
-    box.innerHTML = `<iframe src="${box.dataset.embed}" title="${box.dataset.title}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+  /* contact: a topic fills in the subject */
+  const topics = $$('[data-topic]');
+  topics.forEach((b) => b.addEventListener('click', () => {
+    topics.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    $('#c-sub').value = b.textContent;
+    $('#c-msg').focus({ preventScroll: true });
   }));
 })();
