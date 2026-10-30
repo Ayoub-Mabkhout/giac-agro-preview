@@ -14,25 +14,21 @@
     b.setAttribute('aria-expanded', 'false');
     b.nextElementSibling.hidden = true;
   });
+  const canHover = matchMedia('(hover: hover)');
   subs.forEach((b) => {
+    const li = b.parentElement;
+    const panel = b.nextElementSibling;
+    let timer = 0;
+    const show = () => { clearTimeout(timer); closeSubs(b); b.setAttribute('aria-expanded', 'true'); panel.hidden = false; };
+    const hide = () => { b.setAttribute('aria-expanded', 'false'); panel.hidden = true; };
     b.addEventListener('click', (e) => {
       e.stopPropagation();
-      const open = b.getAttribute('aria-expanded') === 'true';
-      closeSubs(b);
-      b.setAttribute('aria-expanded', String(!open));
-      b.nextElementSibling.hidden = open;
+      if (canHover.matches || panel.hidden) show(); else hide();
     });
-    b.parentElement.addEventListener('mouseenter', () => {
-      if (!matchMedia('(hover: hover)').matches) return;
-      closeSubs(b);
-      b.setAttribute('aria-expanded', 'true');
-      b.nextElementSibling.hidden = false;
-    });
-    b.parentElement.addEventListener('mouseleave', () => {
-      if (!matchMedia('(hover: hover)').matches) return;
-      b.setAttribute('aria-expanded', 'false');
-      b.nextElementSibling.hidden = true;
-    });
+    panel.addEventListener('click', (e) => e.stopPropagation());
+    li.addEventListener('mouseenter', () => { if (canHover.matches) show(); });
+    li.addEventListener('mouseleave', () => { if (canHover.matches) timer = setTimeout(hide, 280); });
+    li.addEventListener('focusout', (e) => { if (!li.contains(e.relatedTarget)) timer = setTimeout(hide, 280); });
   });
   document.addEventListener('click', () => closeSubs());
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeSubs(); toggleDrawer(false); } });
@@ -52,9 +48,9 @@
   $$('#drawer a').forEach((a) => a.addEventListener('click', () => toggleDrawer(false)));
 
   /* entrances */
-  const groups = [['.wall > *', '.wall'], ['.rates tbody tr', '.rates'], ['.close-strip img', '.close-strip']];
+  const groups = [['.wall > *', '.wall'], ['.rates tbody tr', '.rates']];
   groups.forEach(([sel]) => $$(sel).forEach((el, i) => el.style.setProperty('--n', i)));
-    $$('.flow > :not(ul):not(ol), .check li, .plain li, .vows li, .med-grid li, .logos li, .route li li, .pay li, .mg-b, .mg-c, .mg-d, .mast-title > *, .coords > *, .cert > *, .band > *, .nextband > *, .foot-row > *, .sim-form > *, .sim-result > *, .sim-dossier > *, .med-filters > *, .docs article').forEach((el) => el.setAttribute('data-rise', ''));
+    $$('.flow > :not(ul):not(ol), .check li, .plain li, .vows li, .med-grid li, .logos li, .route ol > li, .pay li, .coords > *, .cert > *, .foot-row > *, .sim-form > *, .sim-result > *, .sim-dossier > *, .med-filters > *, .docs article').forEach((el) => el.setAttribute('data-rise', ''));
   $$('[data-rise]').forEach((el) => {
     const peers = [...el.parentElement.children].filter((x) => x.hasAttribute('data-rise'));
     el.style.setProperty('--d', `${Math.min(peers.indexOf(el), 5) * 70}ms`);
@@ -65,7 +61,7 @@
     io.unobserve(en.target);
     if (en.target.matches('[data-count-to]')) countUp(en.target);
   }), { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-  $$('[data-rise], .wall, .rates, .iso-cert, .close-strip, .panel, .study, .story-y, [data-count-to]').forEach((el) => io.observe(el));
+  $$('[data-rise], .wall, .rates, .iso-cert, .study, .story-y, [data-count-to]').forEach((el) => io.observe(el));
 
   setTimeout(() => {
     $$('.shutter').forEach((el) => el.classList.add('is-in'));
@@ -84,45 +80,8 @@
     })(t0);
   }
 
-  /* scroll stages: the hero doors, and the studies rail on wide screens */
-  const clamp = (v) => Math.max(0, Math.min(1, v));
-  const rail = $('[data-rail]');
-  const wide = matchMedia('(min-width: 900px)');
-  const track = rail && $('.rail-track', rail);
-  function sizeRail() {
-    if (!rail) return;
-    const on = wide.matches && !reduce;
-    rail.classList.toggle('pinned', on);
-    rail.style.height = '';
-    if (!on) return;
-    const dist = Math.max(0, track.scrollWidth - innerWidth);
-    rail.style.setProperty('--dist', `${dist}px`);
-    rail.style.height = `${innerHeight + dist}px`;
-  }
-  function frame() {
-    if (rail && rail.classList.contains('pinned')) {
-      const r = rail.getBoundingClientRect();
-      rail.style.setProperty('--p', clamp(-r.top / (rail.offsetHeight - innerHeight)).toFixed(4));
-    }
-  }
-  sizeRail();
-  let ticking = false;
-  const onScroll = () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { ticking = false; frame(); }); };
-  addEventListener('scroll', onScroll, { passive: true });
-  addEventListener('resize', () => { sizeRail(); frame(); });
-  addEventListener('load', () => { sizeRail(); frame(); });
-  frame();
-
-  /* phones: the bar leaves on the way down, and the action dock steps aside near its target */
-  const bar = $('.bar');
+  /* phones: the action dock steps aside near its target */
   const dock = $('.dock');
-  let last = scrollY;
-  addEventListener('scroll', () => {
-    const y = scrollY;
-    if (Math.abs(y - last) < 6) return;
-    bar.classList.toggle('away', y > last && y > 120 && !wide.matches && drawer.hidden);
-    last = y;
-  }, { passive: true });
   if (dock) {
     const seen = new Set();
     const hide = new IntersectionObserver((list) => {
@@ -234,8 +193,6 @@
       sched.hidden = st.profile !== 'organisation';
       if (!sched.hidden) sched.innerHTML = [0.2, 0.3, 0.3, 0.2].map((x, i) => `<li><strong>${fmt(giac * x)}</strong>${S.schedL[i]}</li>`).join('');
       renderPieces(st);
-      const stamp = $('[data-stamp]', root);
-      if (stamp && !reduce) { stamp.classList.remove('hit'); void stamp.getBoundingClientRect(); stamp.classList.add('hit'); }
     }
     fillStudies('entreprise');
     form.addEventListener('change', (e) => {
