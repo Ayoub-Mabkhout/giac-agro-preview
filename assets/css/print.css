@@ -1,0 +1,14 @@
+/* The simulator prints as a one-page dossier preparation sheet; other pages print as plain documents. */
+@page { margin: 16mm; }
+body { background: #fff; color: #000; font-size: 11pt; }
+.bar, .drawer, .foot, .skip, .lightbox, .field-loop, .sim-more, .sim-actions, .sim-form, .sim-opts, .mast-img, .next { display: none !important; }
+.mast-title { padding: 0 0 6mm !important; }
+.mast-title h1 { font-size: 26pt !important; }
+.sim, .sim-result, .sim-dossier { display: block; background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 0 5mm !important; }
+.sim-big { font-size: 34pt !important; color: #000 !important; }
+.sim-bar { display: none; }
+.check label { background: none !important; padding: 2mm 0 !important; }
+.box { outline: 1px solid #000; }
+input:checked + .box { background: #000 !important; }
+.check input:checked ~ .lbl { color: #000 !important; }
+[data-rise] { opacity: 1 !important; transform: none !important; }
