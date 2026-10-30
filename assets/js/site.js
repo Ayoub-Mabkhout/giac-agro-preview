@@ -149,7 +149,8 @@
   if (simData && form) {
     const S = JSON.parse(simData.textContent);
     const root = form.closest('.sim');
-    const fmt = (n) => Math.round(n).toLocaleString('fr-FR').replace(/[  ]/g, ' ');
+    const plain = (n) => Math.round(n).toLocaleString('fr-FR').replace(/[  ]/g, ' ');
+    const fmt = (n) => (document.documentElement.dir === 'rtl' ? `⁦${plain(n)}⁩` : plain(n));
     const money = (n) => `${fmt(n)} ${S.unit}`;
     const study = $('#study', root);
     const cost = $('#cost', root);
@@ -178,7 +179,7 @@
       range.step = big ? 25000 : 5000;
       cost.step = range.step;
       range.value = big ? 800000 : 120000;
-      cost.value = fmt(+range.value);
+      cost.value = plain(+range.value);
     }
     const pieceKey = (st) => `giac-sim-${st.profile}`;
     function renderPieces(st) {
@@ -243,8 +244,8 @@
     });
     root.addEventListener('change', (e) => { if (e.target.name === 'prior' || e.target.name === 'tiers') render(); });
     form.addEventListener('submit', (e) => e.preventDefault());
-    cost.addEventListener('input', () => { const c = +cost.value.replace(/\D/g, '') || 0; cost.value = c ? fmt(c) : ''; render(); });
-    range.addEventListener('input', () => { cost.value = fmt(+range.value); render(); });
+    cost.addEventListener('input', () => { const c = +cost.value.replace(/\D/g, '') || 0; cost.value = c ? plain(c) : ''; render(); });
+    range.addEventListener('input', () => { cost.value = plain(+range.value); render(); });
     $('[data-print]', root)?.addEventListener('click', () => window.print());
     render();
   }
