@@ -652,7 +652,7 @@ input:focus-visible + .box { outline: 3px solid var(--orange); outline-offset: 2
   .close-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .close-strip video { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
   .close-strip img:last-child { display: none; }
-  .stamp { inset-block-end: auto; inset-block-start: 74px; inset-inline-end: 6px; width: 92px; }
+  .stamp { inset-block-end: auto; inset-block-start: 112px; inset-inline-end: 8px; width: 84px; }
 
   .foot { padding-block-start: 36px; }
   .foot-row { grid-template-columns: minmax(0, 1fr); gap: 28px; }
