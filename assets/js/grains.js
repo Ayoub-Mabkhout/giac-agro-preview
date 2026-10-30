@@ -102,16 +102,6 @@
       pts.forEach((p, i) => { X[i] = f.x + p.x * s; Y[i] = f.y + p.y * s; REG[i] = Math.round(p.r / 20) - 1; R[i] = 196; G[i] = 214; B[i] = 245; S[i] = phone ? 1.5 : 2.5; });
     }
 
-    function rate() {
-      const cw = 1100; const ch = 620; const main = Math.round(N * 0.7);
-      const pts = sample(cw, ch, (g) => { g.fillStyle = '#000'; g.font = '500 520px Newsreader, Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('70%', cw / 2, ch / 2); }, main);
-      const f = fitBox(box(), cw / ch); const s = f.w / cw;
-      for (let i = 0; i < N; i++) {
-        if (i < main) { X[i] = f.x + pts[i].x * s; Y[i] = f.y + pts[i].y * s; R[i] = 8; G[i] = 27; B[i] = 62; S[i] = phone ? 1.8 : 3; }
-        else { X[i] = r1[i] * W; Y[i] = r2[i] * H; R[i] = 255; G[i] = 255; B[i] = 255; S[i] = 1.8; A[i] = 0.5; }
-      }
-    }
-
     function columns() {
       const data = JSON.parse(sec.dataset.bars); const b = box();
       const n = data.length; const gap = b.w * 0.035; const colW = (b.w - gap * (n - 1)) / n;
@@ -139,7 +129,7 @@
       const dpr = Math.min(devicePixelRatio || 1, 2);
       cv.width = W * dpr; cv.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ({ logo, field, map, rate, bars: columns })[kind]();
+      ({ logo, field, map, bars: columns })[kind]();
       for (let i = 0; i < count; i++) { SX[i] = X[i] + (r1[i] - 0.5) * W * 0.5; SY[i] = -30 - r2[i] * H * 0.9; }
     }
 
@@ -185,8 +175,8 @@
         ctx.globalAlpha = smooth(clamp((age - 1.1) / 0.6));
         ctx.fillStyle = '#081B3E'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
         bars.items.forEach((b) => {
-          ctx.font = `500 ${phone ? 26 : 40}px Newsreader, Georgia, serif`; ctx.fillText(b.v, b.x + 1, b.top - 8);
-          ctx.font = `400 ${phone ? 15 : 18}px Newsreader, Georgia, serif`; ctx.fillText(b.y, b.x + 1, bars.y + (phone ? 20 : 26));
+          ctx.font = `400 ${phone ? 26 : 40}px Fraunces, Georgia, serif`; ctx.fillText(b.v, b.x + 1, b.top - 8);
+          ctx.font = `500 ${phone ? 14 : 16}px 'Hanken Grotesk', system-ui, sans-serif`; ctx.fillText(b.y, b.x + 1, bars.y + (phone ? 20 : 26));
         });
         ctx.globalAlpha = 1;
       }
