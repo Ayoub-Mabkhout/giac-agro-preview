@@ -52,9 +52,9 @@
   $$('#drawer a').forEach((a) => a.addEventListener('click', () => toggleDrawer(false)));
 
   /* entrances */
-  const groups = [['.mosaic > *', '.mosaic'], ['.wall > *', '.wall'], ['.rates tbody tr', '.rates'], ['.bars i', '.bars']];
+  const groups = [['.wall > *', '.wall'], ['.rates tbody tr', '.rates'], ['.close-strip img', '.close-strip']];
   groups.forEach(([sel]) => $$(sel).forEach((el, i) => el.style.setProperty('--n', i)));
-  $$('.flow > :not(ul):not(ol), .check li, .plain li, .vows li, .med-grid li, .logos li, .route li li, .pay li, .mg-b, .mg-c, .mg-d, .mast-title > *, .coords > *, .cert > *, .band > *, .nextband > *, .foot-row > *, .sim-form > *, .sim-result > *, .sim-dossier > *, .med-filters > *').forEach((el) => el.setAttribute('data-rise', ''));
+    $$('.flow > :not(ul):not(ol), .check li, .plain li, .vows li, .med-grid li, .logos li, .route li li, .pay li, .mg-b, .mg-c, .mg-d, .mast-title > *, .coords > *, .cert > *, .band > *, .nextband > *, .foot-row > *, .sim-form > *, .sim-result > *, .sim-dossier > *, .med-filters > *, .docs article').forEach((el) => el.setAttribute('data-rise', ''));
   $$('[data-rise]').forEach((el) => {
     const peers = [...el.parentElement.children].filter((x) => x.hasAttribute('data-rise'));
     el.style.setProperty('--d', `${Math.min(peers.indexOf(el), 5) * 70}ms`);
@@ -65,12 +65,10 @@
     io.unobserve(en.target);
     if (en.target.matches('[data-count-to]')) countUp(en.target);
   }), { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-  $$('[data-rise], .mosaic, .wall, .rates, .bars, .iso-cert, [data-count-to]').forEach((el) => io.observe(el));
+  $$('[data-rise], .wall, .rates, .iso-cert, .close-strip, .panel, .study, .story-y, [data-count-to]').forEach((el) => io.observe(el));
 
   setTimeout(() => {
     $$('.shutter').forEach((el) => el.classList.add('is-in'));
-    $('.board')?.classList.add('is-in');
-    $('.b-name h1')?.classList.add('is-in');
   }, 60);
 
   function countUp(el) {
@@ -86,19 +84,52 @@
     })(t0);
   }
 
-  /* hero: slow crossfade through the produce photographs */
-  const fade = $('[data-fade]');
-  if (fade && !reduce) {
-    const pics = $$('img', fade);
-    let i = 0;
-    pics[0].classList.add('on');
-    fade.classList.add('ready');
-    setInterval(() => {
-      if (document.hidden) return;
-      pics[i].classList.remove('on');
-      i = (i + 1) % pics.length;
-      pics[i].classList.add('on');
-    }, 5200);
+  /* scroll stages: the hero doors, and the studies rail on wide screens */
+  const clamp = (v) => Math.max(0, Math.min(1, v));
+  const rail = $('[data-rail]');
+  const wide = matchMedia('(min-width: 900px)');
+  const track = rail && $('.rail-track', rail);
+  function sizeRail() {
+    if (!rail) return;
+    const on = wide.matches && !reduce;
+    rail.classList.toggle('pinned', on);
+    rail.style.height = '';
+    if (!on) return;
+    const dist = Math.max(0, track.scrollWidth - innerWidth);
+    rail.style.setProperty('--dist', `${dist}px`);
+    rail.style.height = `${innerHeight + dist}px`;
+  }
+  function frame() {
+    if (rail && rail.classList.contains('pinned')) {
+      const r = rail.getBoundingClientRect();
+      rail.style.setProperty('--p', clamp(-r.top / (rail.offsetHeight - innerHeight)).toFixed(4));
+    }
+  }
+  sizeRail();
+  let ticking = false;
+  const onScroll = () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { ticking = false; frame(); }); };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', () => { sizeRail(); frame(); });
+  addEventListener('load', () => { sizeRail(); frame(); });
+  frame();
+
+  /* phones: the bar leaves on the way down, and the action dock steps aside near its target */
+  const bar = $('.bar');
+  const dock = $('.dock');
+  let last = scrollY;
+  addEventListener('scroll', () => {
+    const y = scrollY;
+    if (Math.abs(y - last) < 6) return;
+    bar.classList.toggle('away', y > last && y > 120 && !wide.matches && drawer.hidden);
+    last = y;
+  }, { passive: true });
+  if (dock) {
+    const seen = new Set();
+    const hide = new IntersectionObserver((list) => {
+      list.forEach((en) => (en.isIntersecting ? seen.add(en.target) : seen.delete(en.target)));
+      dock.classList.toggle('away', seen.size > 0);
+    }, { threshold: 0.05 });
+    $$('.sim, .foot, .close').forEach((el) => hide.observe(el));
   }
 
   /* map */
@@ -126,13 +157,16 @@
     const unit = $('[data-cost-unit]', root);
     const fullList = $('[data-pieces]', root);
     const count = $('[data-count]', root);
+    const barEl = $('[data-bar]', root);
+    barEl.innerHTML = '<b></b>'.repeat(48);
+    const grains = $$('b', barEl);
     const groupsBy = { entreprise: ['diag', 'if', 'ifd'], organisation: ['sas', 'ifs'] };
     const state = () => ({
       profile: form.elements.profile.value,
       tfp: form.elements.tfp.value === '1',
       branch: +form.elements.branch.value,
       study: study.value,
-      cost: Math.max(0, +cost.value || 0),
+      cost: Math.max(0, +cost.value.replace(/\D/g, '') || 0),
       prior: root.querySelector('[name=prior]')?.checked,
       tiers: root.querySelector('[name=tiers]')?.checked,
     });
@@ -143,7 +177,8 @@
       range.min = big ? 100000 : 10000;
       range.step = big ? 25000 : 5000;
       cost.step = range.step;
-      cost.value = range.value = big ? 800000 : 120000;
+      range.value = big ? 800000 : 120000;
+      cost.value = fmt(+range.value);
     }
     const pieceKey = (st) => `giac-sim-${st.profile}`;
     function renderPieces(st) {
@@ -184,11 +219,13 @@
       const giac = Math.min(st.cost * rate, cap);
       const rest = st.cost - giac;
       $('[data-giac]', root).textContent = fmt(giac);
+      $('[data-giac2]', root).textContent = blocked ? '' : money(giac);
       $('[data-rest]', root).textContent = money(rest);
       $('[data-rate]', root).textContent = `${Math.round(rate * 100)}${document.documentElement.lang === 'ar' ? '٪' : ' %'}`;
       $('[data-fees]', root).textContent = st.profile === 'entreprise' ? S.feesV : S.none;
       $('[data-cot-line]', root).hidden = st.profile !== 'entreprise';
-      $('[data-bar]', root).style.setProperty('--p', st.cost ? (giac / st.cost).toFixed(3) : 0);
+      const lit = st.cost ? Math.round((giac / st.cost) * grains.length) : 0;
+      grains.forEach((g, i) => g.classList.toggle('on', i < lit));
       const capEl = $('[data-cap]', root);
       capEl.hidden = !(st.cost * rate > cap);
       capEl.textContent = S.capped.replace('{cap}', `${money(cap)} ${tax}`);
@@ -196,6 +233,8 @@
       sched.hidden = st.profile !== 'organisation';
       if (!sched.hidden) sched.innerHTML = [0.2, 0.3, 0.3, 0.2].map((x, i) => `<li><strong>${fmt(giac * x)}</strong>${S.schedL[i]}</li>`).join('');
       renderPieces(st);
+      const stamp = $('[data-stamp]', root);
+      if (stamp && !reduce) { stamp.classList.remove('hit'); void stamp.getBoundingClientRect(); stamp.classList.add('hit'); }
     }
     fillStudies('entreprise');
     form.addEventListener('change', (e) => {
@@ -204,8 +243,8 @@
     });
     root.addEventListener('change', (e) => { if (e.target.name === 'prior' || e.target.name === 'tiers') render(); });
     form.addEventListener('submit', (e) => e.preventDefault());
-    cost.addEventListener('input', render);
-    range.addEventListener('input', () => { cost.value = range.value; render(); });
+    cost.addEventListener('input', () => { const c = +cost.value.replace(/\D/g, '') || 0; cost.value = c ? fmt(c) : ''; render(); });
+    range.addEventListener('input', () => { cost.value = fmt(+range.value); render(); });
     $('[data-print]', root)?.addEventListener('click', () => window.print());
     render();
   }

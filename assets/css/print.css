@@ -1,7 +1,7 @@
 /* The simulator prints as a one-page dossier preparation sheet; other pages print as plain documents. */
 @page { margin: 16mm; }
 body { background: #fff; color: #000; font-size: 11pt; }
-.bar, .drawer, .foot, .skip, .lightbox, .field-loop, .sim-more, .sim-actions, .sim-form, .sim-opts, .mast-img, .next { display: none !important; }
+.bar, .drawer, .foot, .skip, .lightbox, .dock, .sim-strip, .nextband, .rates-page, .sim-more, .sim-actions, .sim-form, .sim-opts, .mast-grid, .next { display: none !important; }
 .mast-title { padding: 0 0 6mm !important; }
 .mast-title h1 { font-size: 26pt !important; }
 .sim, .sim-result, .sim-dossier { display: block; background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 0 5mm !important; }
